@@ -2,31 +2,39 @@ const express = require('express')
 const logger = require('morgan')
 const app = express()
 const path = require('path')
+const mongoose = require('mongoose')
+const session = require('express-session')
 
-const server = require('http').createServer(app)
+const userRouter = require('./routes/user')
 
-const io = require('socket.io')(server)
+const dbString = 'mongodb://localhost:27017/socketio'
+const dbOptions = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}
+
+mongoose.connect(dbString, dbOptions)
+const db = mongoose.connection
+db.once('open', () => {
+    console.log("Connected")
+})
 
 app.use(logger('dev'))
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 app.use(express.static('public'))
+app.use(session({
+    secret: 'secret',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { 
+        expires: 1000 * 60 * 60 * 24 // 1 day
+    }
+}))
 
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
-app.get('/', (req, res) => {
-    res.render('index.ejs')
-})
+app.use('/user', userRouter)
 
-//Tạo socket 
-io.on('connection', function (socket) {
-    console.log('Welcome to server chat');
-
-    socket.on('send', function (data) {
-        console.log(data)
-        io.sockets.emit('sendBack', {name: "Ahihi do ngoc"});
-    });
-});
-
-server.listen(process.env.PORT || 3000)
+app.listen(process.env.PORT || 3000)
