@@ -1,0 +1,9 @@
+Media Xoa
+
+<form action="/user/media/xoa/<%=postId %>" method="POST">
+    <textarea name="post" cols="30" rows="10"><%=content %></textarea>
+    <input type="date" name="createdAt" value="<%=createdAt%>">
+    <input type="radio" name="private" value="1">
+    <input type="radio" name="private" value="0">
+    <input type="submit">
+</form>

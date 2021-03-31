@@ -6,6 +6,7 @@ const mongoose = require('mongoose')
 const session = require('express-session')
 
 const userRouter = require('./routes/user')
+const testRefRouter= require('./routes/testRef')
 
 const dbString = 'mongodb://localhost:27017/socketio'
 const dbOptions = {
@@ -36,5 +37,6 @@ app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
 app.use('/user', userRouter)
+app.use('/testRef', testRefRouter)
 
 app.listen(process.env.PORT || 3000)

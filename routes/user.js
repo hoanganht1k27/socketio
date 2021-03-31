@@ -3,7 +3,12 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const router = express.Router()
 
+const {checkNull, getFullPath} = require('./util')
+
+const mediaRouter = require('./media.js')
+
 const userModel = require('../models/user')
+const { response } = require('express')
 
 const saltRounds = 10;
 const privateKey = 'anhnguyendeptrai'
@@ -16,9 +21,7 @@ router.get('/login', checkUserLogin, (req, res) => {
     res.render('users/login')
 })
 
-function checkNull(x) {
-    return (x != null && x != undefined && x != '')
-}
+
 
 function checkUserLogin(req, res, next) {
     if(checkNull(req.session.token) && checkNull(req.session.username)) {
@@ -29,6 +32,7 @@ function checkUserLogin(req, res, next) {
 }
 
 function checkUserNotLogin(req, res, next) {
+    req.session.originalUrl = getFullPath(req)
     if(checkNull(req.session.token) && checkNull(req.session.username)) {
         let decoded = jwt.verify(req.session.token, privateKey)
         if(decoded.username === req.session.username) return next()
@@ -49,7 +53,13 @@ router.post('/login', async (req, res) => {
             let token = jwt.sign(ob, privateKey);
             req.session.token = token
             req.session.username = username
-            res.redirect('/user')          
+            if(checkNull(req.session.originalUrl)) {
+                let keep = req.session.originalUrl
+                req.session.originalUrl = ''
+                res.redirect(keep)
+            } else {
+                res.redirect('/user')
+            }
         } else {
             res.send({message: "Mat khau sai"})
         }
@@ -81,5 +91,12 @@ router.post('/register', async (req, res) => {
         res.send(err)
     }
 })
+
+router.get('/logout', checkUserNotLogin, (req, res) => {
+    req.session.token = req.session.username = null
+    res.redirect('/user/login')
+})
+
+router.use('/media', checkUserNotLogin, mediaRouter)
 
 module.exports = router
